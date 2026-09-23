@@ -16,10 +16,9 @@
         
         body, html { 
             background: #000; 
-            overflow: hidden; 
-            width: 100vw; 
-            height: 100vh; 
-            touch-action: none; 
+            overflow: hidden; /* Prevents main screen from scrolling, keeps iframe inside */
+            width: 100%; 
+            height: 100%; 
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Russo+One&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
@@ -30,6 +29,7 @@
             background: rgba(10, 10, 10, 0.95);
             display: flex; align-items: center; justify-content: center;
             z-index: 99999; backdrop-filter: blur(10px);
+            touch-action: none;
         }
         .auth-box {
             background: #111; border: 2px solid #cc0000; border-radius: 10px;
@@ -49,9 +49,10 @@
         }
         .auth-btn:active { transform: scale(0.95); }
 
-        /* --- BACKGROUND IFRAME --- */
+        /* --- BACKGROUND IFRAME FIXED FOR MOBILE --- */
         #bg-iframe {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw; height: 100vh;
             border: none; z-index: 1; display: none;
         }
 
@@ -145,7 +146,7 @@
       <div id="mini">
           <div class="mini-pulse"></div>
           <div class="mini-inner">
-              <img src="https://dummyimage.com/62x62/ffaa00/fff&text=LOGO" class="mini-img">
+              <img src="logo.png" onerror="this.src='https://dummyimage.com/62x62/ffaa00/fff&text=LOGO';" class="mini-img">
           </div>
       </div>
     </div>
