@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DM First Panel</title>
+    <style>
+        * {
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none !important;
+        } 
+        
+        body, html { 
+            background: #000; 
+            overflow: hidden; 
+            width: 100vw; 
+            height: 100vh; 
+            touch-action: none; 
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Russo+One&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
+
+        /* --- LOGIN SCREEN CSS --- */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(10, 10, 10, 0.95);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 99999; backdrop-filter: blur(10px);
+        }
+        .auth-box {
+            background: #111; border: 2px solid #cc0000; border-radius: 10px;
+            padding: 30px; text-align: center; width: 85%; max-width: 350px;
+            box-shadow: 0 0 20px rgba(204, 0, 0, 0.5);
+        }
+        .auth-title { font-family: 'Orbitron', sans-serif; color: #ff3333; font-size: 20px; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,51,51,0.6); }
+        .auth-input {
+            width: 100%; padding: 12px; margin-bottom: 20px; background: #000;
+            border: 1px solid #ffaa00; color: #fff; font-family: 'Share Tech Mono', monospace;
+            text-align: center; font-size: 16px; border-radius: 5px; text-transform: uppercase;
+        }
+        .auth-btn {
+            width: 100%; padding: 12px; background: linear-gradient(90deg, #cc0000, #ff3300);
+            border: none; color: #fff; font-family: 'Orbitron', sans-serif; font-weight: bold;
+            font-size: 16px; border-radius: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(255, 51, 0, 0.5);
+        }
+        .auth-btn:active { transform: scale(0.95); }
+
+        /* --- BACKGROUND IFRAME --- */
+        #bg-iframe {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            border: none; z-index: 1; display: none;
+        }
+
+        /* --- MINI LOGO & MAIN TOOL WAPPERS (Made Draggable) --- */
+        #mini-wrapper { 
+            width: 90px; height: 90px; display: none; align-items: center; justify-content: center; 
+            position: absolute; z-index: 9999; touch-action: none; top: 15%; left: 10px;
+        }
+        #glow-wrapper { 
+            display: none; align-items: center; justify-content: center; 
+            position: absolute; padding: 30px; width: 290px; height: 350px; 
+            z-index: 9999; touch-action: none;
+        }
+
+        /* --- EXISTING UI CSS (UNCHANGED) --- */
+        #mini { width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; background: linear-gradient(145deg, #ffaa00, #ff3300); box-shadow: 0 5px 15px rgba(0,0,0,0.8), 0 0 12px rgba(255, 85, 0, 0.6); animation: floatOrb 3s ease-in-out infinite; padding: 3px; z-index: 20; backface-visibility: hidden; transform: translateZ(0); } 
+        .mini-pulse { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #ff5500; animation: pulseRing 1.5s infinite ease-out; z-index: 10; }
+        .mini-inner { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; border: 2px solid #1a0800; position: relative; background: #000; display:flex; align-items:center; justify-content:center; }
+        .mini-img { width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none; }
+        
+        @keyframes pulseRing { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+        @keyframes floatOrb { 0% { transform: translateY(0px) scale(0.95); } 50% { transform: translateY(-5px) scale(1.02); } 100% { transform: translateY(0px) scale(0.95); } }
+
+        #main-shadow-wrapper { position: absolute; z-index: 5; animation: breathShadow 2.5s ease-in-out infinite alternate; will-change: filter, transform; }
+        @keyframes breathShadow { 0% { filter: drop-shadow(0 0 2px #ff5500) drop-shadow(0 0 5px rgba(255, 85, 0, 0.4)); transform: scale(0.98); } 100% { filter: drop-shadow(0 0 8px #ffaa00) drop-shadow(0 0 15px rgba(255, 51, 0, 0.6)); transform: scale(1.02); } }
+
+        #main { width: 230px; height: 285px; padding: 1.5px; background: #cc0000; clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px); }
+        .main-inner { width: 100%; height: 100%; display: flex; flex-direction: column; padding: 10px 8px; background: rgba(20, 20, 25, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); clip-path: polygon(17px 0, calc(100% - 17px) 0, 100% 17px, 100% calc(100% - 17px), calc(100% - 17px) 100%, 17px 100%, 0 calc(100% - 17px), 0 17px); position: relative; }
+
+        .accent { position: absolute; width: 6px; height: 6px; background: #ffaa00; z-index: 5; box-shadow: 0 0 5px #ffaa00; }
+        .acc-t { top: 0; left: 50%; transform: translateX(-50%); } .acc-b { bottom: 0; left: 50%; transform: translateX(-50%); } .acc-l { left: 0; top: 50%; transform: translateY(-50%); } .acc-r { right: 0; top: 50%; transform: translateY(-50%); }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .title-hack { font-family: 'Audiowide', cursive; font-size: 11px; color: #fff; text-shadow: 0 0 8px #ff5500; overflow: hidden; text-overflow: ellipsis; }
+        .live-box { border: 1px solid rgba(204, 0, 0, 0.5); border-radius: 4px; padding: 3px 5px; display: flex; align-items: center; gap: 4px; }
+        .live-dot { width: 5px; height: 5px; background: #ff3333; border-radius: 50%; box-shadow: 0 0 5px #ff3333; animation: blinkerLive 1s infinite; }
+        .live-text { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: #cc0000; letter-spacing: 1px; }
+        @keyframes blinkerLive { 50% { opacity: 0.2; } }
+        
+        .hr-line { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(204, 0, 0, 0.5), transparent); margin-bottom: 6px; }
+
+        .scanner-box { flex: 1; border: 1px solid rgba(204, 0, 0, 0.3); border-radius: 6px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #050505; overflow: hidden; margin-bottom: 8px; min-height: 110px; }
+        .scan-c { position: absolute; width: 10px; height: 10px; border-color: #ffaa00; border-style: solid; opacity: 0.8; }
+        .sc-tl { top: 6px; left: 6px; border-width: 2px 0 0 2px; } .sc-tr { top: 6px; right: 6px; border-width: 2px 2px 0 0; } .sc-bl { bottom: 6px; left: 6px; border-width: 0 0 2px 2px; } .sc-br { bottom: 6px; right: 6px; border-width: 0 2px 2px 0; }
+        .grid-bg { position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0.15; background-image: radial-gradient(#cc0000 1px, transparent 1px); background-size: 10px 10px; z-index: 0; }
+        .circle-wm { position: absolute; width: 100px; height: 100px; border-radius: 50%; border: 1px solid rgba(204, 0, 0, 0.15); z-index: 0; display:flex; align-items:center; justify-content:center; }
+        .circle-wm::before { content:''; position: absolute; width: 75px; height: 75px; border-radius: 50%; border: 1px solid rgba(204, 0, 0, 0.15); }
+        .laser { position: absolute; left: 0; width: 100%; height: 2px; background: #ff3300; box-shadow: 0 0 10px #ff3300, 0 0 20px #ff3300; z-index: 2; animation: scanContinuous 2.5s linear infinite; }
+        @keyframes scanContinuous { 0% { top: 0%; opacity: 1; } 95% { top: 100%; opacity: 1; } 96% { opacity: 0; } 100% { top: 0%; opacity: 0; } }
+
+        .decode-bars { display: flex; gap: 4px; height: 30px; align-items: center; margin-bottom: 6px; z-index: 3; position: relative; }
+        .d-bar { width: 5px; background: #ffaa00; animation: decodePulse 0.5s ease-in-out infinite alternate; box-shadow: 0 0 8px #ffaa00; border-radius: 1px; }
+        .d-bar:nth-child(1) { animation-delay: 0.1s; } .d-bar:nth-child(2) { animation-delay: 0.4s; } .d-bar:nth-child(3) { animation-delay: 0.0s; } .d-bar:nth-child(4) { animation-delay: 0.3s; } .d-bar:nth-child(5) { animation-delay: 0.2s; }
+        @keyframes decodePulse { 0% { height: 5px; opacity: 0.3; } 100% { height: 30px; opacity: 1; } }
+
+        .center-text { position: relative; z-index: 3; text-align: center; background: transparent; padding: 5px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+        .cyber-auth { font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 900; color: #ff3333; text-shadow: 0 0 10px rgba(255,51,51,0.6); display: flex; align-items: center; justify-content: center; letter-spacing: 1px; }
+        .cyber-req { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #ff9999; margin-top: 4px; letter-spacing: 1px; }
+        .txt-low-bal { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: #ff9900; letter-spacing: 2px; margin-bottom: 4px; text-shadow: none; }
+        .txt-min-req { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #cc7a00; letter-spacing: 1px; text-shadow: none; }
+        .txt-result-big { font-family: 'Russo One', sans-serif; font-size: 33px; font-weight: 900; color: #fff; letter-spacing: 3px; -webkit-text-stroke: 2.5px #fff; text-shadow: 0 0 10px rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; z-index: 3; position: relative; width: 100%; margin-bottom: 2px; }
+        .period-pill { position: absolute; bottom: 8px; border: 1px solid rgba(204, 0, 0, 0.4); background: #0f0802; border-radius: 0px; padding: 3px 10px; font-family: 'Share Tech Mono', monospace; font-size: 9px; color: #cc0000; letter-spacing: 2px; z-index: 3; transition: all 0.3s; pointer-events: none; }
+
+        #controls { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+        .btn-row { display: flex; gap: 8px; width: 100%; justify-content: center; }
+        .btn { flex: 1; padding: 8px 0; font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border-radius: 6px; transition: 0.1s; display:flex; justify-content:center; align-items:center; }
+        .btn-vip { background: linear-gradient(90deg, #ffd700, #daa520); border: 1px solid #fff; color: #000; box-shadow: 0 0 10px rgba(218,165,32,0.6); text-shadow: none; font-weight: 900; width: 100%; white-space: nowrap; }
+        .btn-vip:active { transform: scale(0.96); filter: brightness(0.8); }
+        .btn-recharge, .btn-execute, .btn-login { background: #aa0000; border: 1px solid #cc0000; color: #fff; }
+        .btn-recharge:active, .btn-execute:active, .btn-login:active { background: #cc0000; transform: scale(0.96); }
+        .btn-hide { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(150, 150, 150, 0.3); color: #e0e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.5); }
+        .btn-hide:active { background: rgba(30, 30, 30, 0.9); transform: scale(0.96); border-color: rgba(255, 255, 255, 0.5); }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN OVERLAY -->
+    <div id="auth-screen">
+        <div class="auth-box">
+            <div class="auth-title">DM FIRST VIP LOGIN</div>
+            <input type="password" id="sys-pwd" class="auth-input" placeholder="ENTER PASSWORD">
+            <button class="auth-btn" onclick="verifyAuth()">VERIFY & ACCESS</button>
+        </div>
+    </div>
+
+    <!-- 2. BACKGROUND WEBSITE -->
+    <iframe id="bg-iframe" src="https://dmfirst1.com/#/login"></iframe>
+
+    <!-- 3. MINI LOGO -->
+    <div id="mini-wrapper">
+      <div id="mini">
+          <div class="mini-pulse"></div>
+          <div class="mini-inner">
+              <img src="https://dummyimage.com/62x62/ffaa00/fff&text=LOGO" class="mini-img">
+          </div>
+      </div>
+    </div>
+
+    <!-- 4. MAIN TOOL PANEL -->
+    <div id="glow-wrapper">
+      <div id="main-shadow-wrapper">
+        <div id="main">
+          <div class="accent acc-t"></div><div class="accent acc-b"></div><div class="accent acc-l"></div><div class="accent acc-r"></div>
+          <div class="main-inner">
+            <div class="header-top">
+                <div class="title-hack">𝐃𝐌 𝐅𝐈𝐑𝐒𝐓 𝐑𝐄𝐀𝐋 𝐏𝐀𝐍𝐄𝐋</div>
+                <div class="live-box"><div class="live-dot"></div><div class="live-text">LIVE</div></div>
+            </div>
+            <div class="hr-line"></div>
+            <div class="scanner-box">
+              <div class="scan-c sc-tl"></div><div class="scan-c sc-tr"></div><div class="scan-c sc-bl"></div><div class="scan-c sc-br"></div>
+              <div class="grid-bg"></div>
+              <div class="circle-wm">
+                  <svg viewBox="0 0 100 100" style="width:65px;height:65px;opacity:0.35;position:relative;z-index:1;">
+                      <g stroke="#cc0000" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M 38 65 C 15 50 15 10 50 10 C 85 10 85 50 62 65" />
+                          <path d="M 38 25 C 38 10 62 10 62 25 C 62 35 50 42 50 42 C 50 42 38 35 38 25 Z" />
+                          <circle cx="44" cy="22" r="2.5" fill="#cc0000" stroke="none" />
+                          <circle cx="56" cy="22" r="2.5" fill="#cc0000" stroke="none" />
+                          <path d="M 50 42 L 50 52 L 44 58 M 50 52 L 56 58" stroke-width="3.5" />
+                          <rect x="25" y="65" width="50" height="14" rx="7" />
+                          <rect x="12" y="79" width="76" height="14" rx="7" />
+                          <path d="M 88 86 Q 105 86 105 65 Q 95 72 75 72" />
+                      </g>
+                  </svg>
+              </div>
+              <div class="laser" id="laser-line"></div>
+              <div class="center-text" id="content"></div>
+              <div class="period-pill" id="period-box">PERIOD: WAITING</div>
+            </div>
+            <div id="controls"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+        /* ================================
+           LOGIN VERIFICATION
+           ================================ */
+        function verifyAuth() {
+            var pwd = document.getElementById("sys-pwd").value.toUpperCase();
+            if (pwd === "YADAV") {
+                document.getElementById("auth-screen").style.display = "none";
+                document.getElementById("bg-iframe").style.display = "block";
+                document.getElementById("mini-wrapper").style.display = "flex";
+                
+                // Initialize Draggable functionality after showing them
+                makeDraggable(document.getElementById("mini-wrapper"));
+                makeDraggable(document.getElementById("glow-wrapper"));
+            } else {
+                alert("ACCESS DENIED: INCORRECT PASSWORD");
+            }
+        }
+
+        /* ================================
+           DRAG & MOVE LOGIC (No scroll)
+           ================================ */
+        function makeDraggable(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            var isMoved = false;
+            
+            elmnt.addEventListener('touchstart', dragStart, {passive: false});
+            elmnt.addEventListener('mousedown', dragStart);
+
+            function dragStart(e) {
+                // Let buttons be clicked without triggering drag
+                if(e.target.tagName === 'BUTTON' || e.target.closest('.btn')) return;
+                
+                e.preventDefault(); // Prevents background website from scrolling
+                isMoved = false;
+
+                if (e.type === 'touchstart') {
+                    pos3 = e.touches[0].clientX;
+                    pos4 = e.touches[0].clientY;
+                } else {
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                }
+
+                document.addEventListener('touchend', dragEnd);
+                document.addEventListener('touchmove', dragMove, {passive: false});
+                document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('mousemove', dragMove);
+            }
+
+            function dragMove(e) {
+                e.preventDefault(); // Explicitly stop background scroll during drag
+                isMoved = true;
+                
+                var clientX = (e.type === 'touchmove') ? e.touches[0].clientX : e.clientX;
+                var clientY = (e.type === 'touchmove') ? e.touches[0].clientY : e.clientY;
+
+                pos1 = pos3 - clientX;
+                pos2 = pos4 - clientY;
+                pos3 = clientX;
+                pos4 = clientY;
+
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function dragEnd(e) {
+                document.removeEventListener('touchend', dragEnd);
+                document.removeEventListener('touchmove', dragMove);
+                document.removeEventListener('mouseup', dragEnd);
+                document.removeEventListener('mousemove', dragMove);
+
+                // If not moved and it was the mini logo, open the tool
+                if (!isMoved && elmnt.id === 'mini-wrapper') {
+                    openM();
+                }
+            }
+        }
+
+        /* ================================
+           TOOL LOGIC & API (UNCHANGED)
+           ================================ */
+        var TeamBridge = {
+            playAudioFile: function(audioName) { console.log('Audio Played:', audioName); },
+            goToDeposit: function() { alert('Navigate to Deposit inside Web'); }
+        };
+
+        var balance = '1500.00'; 
+        var state = 'wingo'; 
+        var isScanning = false; 
+        var resultDisplayed = false; 
+        var isVip = false;
+        var currentResultSz = 'BIG'; 
+        var currentNum = '0'; 
+        var currentPeriodText = 'WAITING'; 
+        var lowBalSpoken = false; 
+        var lastPredType = 'NONE';
+
+        function getP(){ 
+            var d = new Date(); 
+            var utc = new Date(d.toLocaleString('en-US', {timeZone: 'UTC'})); 
+            utc.setMinutes(utc.getMinutes() + 330 - 1); 
+            return String(10001 + (utc.getUTCHours() * 60 + utc.getUTCMinutes())).slice(-5); 
+        }
+
+        function openM(){ 
+            var gw = document.getElementById('glow-wrapper');
+            gw.style.display = 'flex'; 
+            document.getElementById('mini-wrapper').style.display = 'none'; 
+            
+            // Auto center tool when opening
+            gw.style.left = (window.innerWidth / 2 - 145) + 'px'; 
+            gw.style.top = (window.innerHeight / 2 - 175) + 'px';
+            
+            render(); 
+        }
+        
+        function closeM(){ 
+            document.getElementById('glow-wrapper').style.display = 'none'; 
+            document.getElementById('mini-wrapper').style.display = 'flex'; 
+        }
+
+        function processVipResult(sz, nm, p) { 
+            setTimeout(function(){ 
+                currentResultSz = sz; 
+                currentNum = nm; 
+                currentPeriodText = p; 
+                state = 'result'; 
+                isScanning = false; 
+                resultDisplayed = true; 
+                render(); 
+            }, 4000); 
+        }
+
+        function generateNew() { 
+            lastPredType = 'NORMAL'; 
+            state = 'scanning'; 
+            isScanning = true; 
+            isVip = false;
+            
+            var cont = document.getElementById('content'); 
+            var ctrl = document.getElementById('controls');
+            
+            cont.innerHTML = '<div class="decode-bars"><div class="d-bar"></div><div class="d-bar"></div><div class="d-bar"></div><div class="d-bar"></div><div class="d-bar"></div></div><div class="txt-min-req" style="color:#ffaa00; margin-top:5px;">SYNCING 1M API...</div>';
+            document.getElementById('period-box').innerText = 'PERIOD: SCANNING...';
+            ctrl.innerHTML = '<div class="btn-row"><button class="btn btn-hide" onclick="closeM()" style="width:100%;">CANCEL</button></div>';
+            
+            try { 
+                fetch('https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json') 
+                .then(r => r.json()).then(data => { 
+                    var last = data.data.list[0]; 
+                    var n = parseInt(last.number); 
+                    var s = (n <= 4) ? 'SMALL' : 'BIG'; 
+                    var p = String(last.issueNumber).slice(-5); 
+                    processVipResult(s, n, p); 
+                }).catch(e => { 
+                    var sz = (Math.random() > 0.5) ? 'BIG' : 'SMALL'; 
+                    var nm = (sz === 'BIG') ? 8 : 2; 
+                    processVipResult(sz, nm, getP()); 
+                }); 
+            } catch(ex) { 
+                var sz = (Math.random() > 0.5) ? 'BIG' : 'SMALL'; 
+                var nm = (sz === 'BIG') ? 6 : 4; 
+                processVipResult(sz, nm, getP()); 
+            } 
+        }
+
+        function generateVIP() { 
+            var cleanBal = parseFloat(balance.replace(/[^0-9.-]+/g,'')); 
+            if (cleanBal < 1200) { 
+                TeamBridge.playAudioFile('vip.mp3'); 
+                var pb = document.getElementById('period-box'); 
+                var oldText = pb.innerText; 
+                pb.innerText = 'REQ: ₹1200 FOR VIP'; 
+                pb.style.color = '#ffd700'; 
+                pb.style.borderColor = '#ffd700'; 
+                setTimeout(function(){ 
+                    pb.innerText = oldText; 
+                    pb.style.color = '#cc0000'; 
+                    pb.style.borderColor = 'rgba(204, 0, 0, 0.4)'; 
+                }, 2500); 
+                return; 
+            } 
+            
+            if (lastPredType !== 'VIP') { TeamBridge.playAudioFile('unlock.mp3'); } 
+            lastPredType = 'VIP'; 
+            state = 'scanning'; 
+            isScanning = true; 
+            isVip = true;
+            
+            var cont = document.getElementById('content'); 
+            var ctrl = document.getElementById('controls');
+            
+            cont.innerHTML = '<div class="decode-bars"><div class="d-bar" style="background:#ffd700; box-shadow:0 0 8px #ffd700;"></div><div class="d-bar" style="background:#ffd700; box-shadow:0 0 8px #ffd700;"></div><div class="d-bar" style="background:#ffd700; box-shadow:0 0 8px #ffd700;"></div><div class="d-bar" style="background:#ffd700; box-shadow:0 0 8px #ffd700;"></div><div class="d-bar" style="background:#ffd700; box-shadow:0 0 8px #ffd700;"></div></div><div class="txt-min-req" style="color:#ffd700; margin-top:5px;">ANALYZING 30S API...</div>';
+            var pb = document.getElementById('period-box'); 
+            pb.innerText = 'VIP SCANNING...'; 
+            pb.style.color = '#ffd700'; 
+            pb.style.borderColor = '#ffd700';
+            ctrl.innerHTML = '<div class="btn-row"><button class="btn btn-hide" onclick="closeM()" style="width:100%;">CANCEL</button></div>';
+            
+            try { 
+                fetch('https://draw.ar-lottery01.com/WinGo/WinGo_30S/GetHistoryIssuePage.json') 
+                .then(r => r.json()).then(data => { 
+                    var last = data.data.list[0]; 
+                    var n = parseInt(last.number); 
+                    var s = (n <= 4) ? 'SMALL' : 'BIG'; 
+                    var p = String(last.issueNumber).slice(-5); 
+                    processVipResult(s, n, p); 
+                }).catch(e => { 
+                    var sz = (Math.random() > 0.5) ? 'BIG' : 'SMALL'; 
+                    var nm = (sz === 'BIG') ? 9 : 0; 
+                    processVipResult(sz, nm, getP()); 
+                }); 
+            } catch(ex) { 
+                var sz = (Math.random() > 0.5) ? 'BIG' : 'SMALL'; 
+                var nm = (sz === 'BIG') ? 6 : 4; 
+                processVipResult(sz, nm, getP()); 
+            } 
+        }
+
+        function render(){
+            var cont = document.getElementById('content'); 
+            var ctrl = document.getElementById('controls'); 
+            var pbox = document.getElementById('period-box'); 
+            var cleanBal = parseFloat(balance.replace(/[^0-9.-]+/g,''));
+            
+            pbox.style.color = '#cc0000'; 
+            pbox.style.borderColor = 'rgba(204, 0, 0, 0.4)';
+            
+            var fullBtns = '';
+            if(!isNaN(cleanBal) && cleanBal >= 300) { 
+                fullBtns += '<button class="btn btn-vip" onclick="generateVIP()">★ VIP PREDICTION ★</button>'; 
+            } 
+            fullBtns += '<div class="btn-row"><button class="btn btn-execute" onclick="generateNew()">EXECUTE</button><button class="btn btn-hide" onclick="closeM()">HIDE</button></div>';
+            
+            if(state == 'reg'){
+                cont.innerHTML = '<div class="cyber-auth">AUTH</div><div class="cyber-req">LOGIN REQUIRED</div>'; 
+                pbox.innerText = 'STATUS: LOCKED';
+                ctrl.innerHTML = '<div class="btn-row"><button class="btn btn-login" onclick="closeM()">LOGIN</button><button class="btn btn-hide" onclick="closeM()">HIDE</button></div>'; 
+                resultDisplayed = false;
+            } else if(state == 'waiting'){
+                cont.innerHTML = '<div class="txt-low-bal">READY</div><div class="txt-min-req">TAP TO DEPOSIT</div>'; 
+                pbox.innerText = 'STATUS: STANDBY';
+                ctrl.innerHTML = '<div class="btn-row"><button class="btn btn-recharge" onclick="TeamBridge.goToDeposit()">DEPOSIT</button><button class="btn btn-hide" onclick="closeM()">HIDE</button></div>'; 
+                resultDisplayed = false;
+            } else if(state == 'wingo' || state == 'result'){ 
+                if(isNaN(cleanBal) || cleanBal < 300){
+                    if(!lowBalSpoken) { TeamBridge.playAudioFile('low.mp3'); lowBalSpoken = true; }
+                    cont.innerHTML = '<div class="txt-low-bal">LOW BALANCE</div><div class="txt-min-req">MIN ₹300 NEEDED</div>';
+                    pbox.innerText = 'PERIOD: ' + (currentPeriodText === 'WAITING' ? getP() : currentPeriodText);
+                    ctrl.innerHTML = '<div class="btn-row"><button class="btn btn-recharge" onclick="TeamBridge.goToDeposit()">DEPOSIT</button><button class="btn btn-hide" onclick="closeM()">HIDE</button></div>'; 
+                    resultDisplayed = false;
+                } else {
+                    lowBalSpoken = false;
+                    if(!resultDisplayed) {
+                        cont.innerHTML = '<div class="txt-low-bal" style="color:#fff;">SERVER LINKED</div><div class="txt-min-req">BAL: '+balance+'</div>';
+                        pbox.innerText = 'PERIOD: ' + getP(); 
+                        ctrl.innerHTML = fullBtns;
+                    } else {
+                        if(isVip) {
+                            cont.innerHTML = '<div style="color:#ffd700; font-size:10px; font-family:\'Orbitron\'; letter-spacing:2px; margin-bottom:2px; text-shadow:0 0 5px rgba(255,215,0,0.5);">30S VIP PREDICTION</div><div class="txt-result-big" style="color:#ffd700; text-shadow:0 0 15px rgba(255,215,0,0.8);">'+currentResultSz+' <span style="color:#ffd700; font-size:30px; margin:0 10px;">|</span> '+currentNum+'</div>';
+                            pbox.innerText = 'VIP PERIOD: ' + currentPeriodText; 
+                            pbox.style.color = '#ffd700'; 
+                            pbox.style.borderColor = '#ffd700';
+                        } else {
+                            cont.innerHTML = '<div class="txt-result-big">'+currentResultSz+' <span style="color:#cc0000; font-size:30px; margin:0 10px; font-weight:normal; -webkit-text-stroke: 0px transparent; text-shadow: none; font-family:\'Orbitron\', sans-serif;">|</span> '+currentNum+'</div>';
+                            pbox.innerText = 'PERIOD: ' + currentPeriodText;
+                        }
+                        ctrl.innerHTML = fullBtns;
+                    }
+                }
+            }
+        }
+        
+        setInterval(function(){ 
+            if((state === 'wingo' || state === 'result') && !isScanning) { 
+                var cleanBal = parseFloat(balance.replace(/[^0-9.-]+/g,'')); 
+                if(!isNaN(cleanBal) && cleanBal >= 300) { 
+                    var cp = getP(); 
+                    if (state === 'wingo' && !resultDisplayed) { 
+                        document.getElementById('period-box').innerText = 'PERIOD: ' + cp; 
+                    } 
+                } 
+            } 
+        }, 1000);
+
+    </script>
+</body>
+</html>
