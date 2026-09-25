@@ -19,13 +19,14 @@
             overflow: hidden; /* Prevents main screen from scrolling, keeps iframe inside */
             width: 100%; 
             height: 100%; 
+            height: 100dvh;
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Russo+One&family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap');
 
         /* --- LOGIN SCREEN CSS --- */
         #auth-screen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
             background: rgba(5, 15, 8, 0.95);
             display: flex; align-items: center; justify-content: center;
             z-index: 99999; backdrop-filter: blur(10px);
@@ -49,11 +50,20 @@
         }
         .auth-btn:active { transform: scale(0.95); }
 
-        /* --- BACKGROUND IFRAME FIXED FOR MOBILE --- */
+        /* --- BACKGROUND IFRAME FIXED FOR MOBILE SCREEN --- */
         #bg-iframe {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            width: 100vw; height: 100vh;
-            border: none; z-index: 1; display: none;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            height: 100dvh;
+            border: 0; 
+            outline: none;
+            z-index: 1; 
+            display: none;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* --- MINI LOGO & MAIN TOOL WRAPPERS --- */
